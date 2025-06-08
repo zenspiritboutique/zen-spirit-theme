@@ -1,9 +1,9 @@
-name: CI/CD Shopify Theme
+name: Thème Shopify CI/CD
 
 on:
   push:
     branches:
-      - main
+      - principal
 
 jobs:
   deploy:
@@ -13,7 +13,7 @@ jobs:
       - name: 🚀 Check out repository
         uses: actions/checkout@v4
 
-      - name: 🛠 Install Node.js
+      - name: 🛠️ Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
@@ -25,7 +25,11 @@ jobs:
         run: |
           echo "store: ${{ secrets.SHOPIFY_STORE }}" >> ~/.shopify-cli.yml
           echo "password: ${{ secrets.SHOPIFY_PASSWORD }}" >> ~/.shopify-cli.yml
-          echo "theme_id: ${{ secrets.SHOPIFY_THEME_ID }}" >> ~/.shopify-cli.yml
 
       - name: 🚀 Deploy theme to Shopify
-        run: shopify theme push --allow-live --theme ${{ secrets.SHOPIFY_THEME_ID }}
+        run: |
+          shopify theme push \
+            --store ${{ secrets.SHOPIFY_STORE }} \
+            --password ${{ secrets.SHOPIFY_PASSWORD }} \
+            --theme ${{ secrets.SHOPIFY_THEME_ID }} \
+            --allow-live
