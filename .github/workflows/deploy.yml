@@ -8,8 +8,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: 📦 Check out repository
+      - name: 🚀 Check out repository
         uses: actions/checkout@v4
 
       - name: 🛠 Install Node.js
@@ -24,11 +25,7 @@ jobs:
         run: |
           echo "store: ${{ secrets.SHOPIFY_STORE }}" >> ~/.shopify-cli.yml
           echo "password: ${{ secrets.SHOPIFY_PASSWORD }}" >> ~/.shopify-cli.yml
+          echo "theme_id: ${{ secrets.SHOPIFY_THEME_ID }}" >> ~/.shopify-cli.yml
 
       - name: 🚀 Deploy theme to Shopify
-        run: |
-          shopify theme push \
-            --store=${{ secrets.SHOPIFY_STORE }} \
-            --password=${{ secrets.SHOPIFY_PASSWORD }} \
-            --theme=${{ secrets.SHOPIFY_THEME_ID }} \
-            --allow-live
+        run: shopify theme push --allow-live --theme ${{ secrets.SHOPIFY_THEME_ID }}
