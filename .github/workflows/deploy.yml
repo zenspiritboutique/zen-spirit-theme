@@ -26,5 +26,9 @@ jobs:
           echo "store: ${{ secrets.SHOPIFY_STORE }}" >> ~/.shopify-cli.yml
           echo "password: ${{ secrets.SHOPIFY_PASSWORD }}" >> ~/.shopify-cli.yml
 
-      - name: 🚀 Deploy theme to Shopify
-        run: shopify theme push --allow-live
+- name: 🚀 Deploy theme to Shopify
+  run: |
+    shopify theme push \
+      --store=${{ secrets.SHOPIFY_STORE }} \
+      --password=${{ secrets.SHOPIFY_PASSWORD }} \
+      --allow-live
