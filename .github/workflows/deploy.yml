@@ -27,4 +27,4 @@ jobs:
           echo "password: ${{ secrets.SHOPIFY_PASSWORD }}" >> ~/.shopify-cli.yml
 
       - name: 🚀 Deploy theme to Shopify
-        run: shopify theme push --allow-live
+        run: shopify theme push --store=zenspiritboutique.myshopify.com --password="${{ secrets.SHOPIFY_PASSWORD }}" --allow-live
