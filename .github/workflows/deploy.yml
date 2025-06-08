@@ -10,20 +10,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📦 Check out repository
+      - name: 🚀 Check out repository
         uses: actions/checkout@v4
 
-      - name: ⚙️ Install Node.js
+      - name: 🔧 Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      - name: 📥 Install Shopify CLI
+      - name: 📦 Install Shopify CLI
         run: npm install -g @shopify/cli @shopify/theme
 
       - name: 🔐 Configure Shopify CLI
         run: |
-          echo "store: ${{ secrets.SHOPIFY_STORE }}" > ~/.shopify-cli.yml
+          echo "store: ${{ secrets.SHOPIFY_STORE }}" >> ~/.shopify-cli.yml
           echo "password: ${{ secrets.SHOPIFY_PASSWORD }}" >> ~/.shopify-cli.yml
 
       - name: 🚀 Deploy theme to Shopify
