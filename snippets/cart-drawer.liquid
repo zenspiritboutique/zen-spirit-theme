@@ -6,39 +6,22 @@
 {% endcomment %}
 
 {{ 'quantity-popover.css' | asset_url | stylesheet_tag }}
-{% comment %} {{ 'component-card.css' | asset_url | stylesheet_tag }} {% endcomment %}
+{{ 'component-card.css' | asset_url | stylesheet_tag }}
 
 <script src="{{ 'cart.js' | asset_url }}" defer="defer"></script>
 <script src="{{ 'quantity-popover.js' | asset_url }}" defer="defer"></script>
-
-<script src="{{ 'product-info.js' | asset_url }}" defer="defer"></script>
-<script src="{{ 'product-form.js' | asset_url }}" defer="defer"></script> 
-
-{% if settings.cart_drawer_collection != blank %}
-  {{ 'component-card.css' | asset_url | stylesheet_tag }}
-{% endif %}
-{% if settings.show_cart_payment_badges %}
-  {{ 'component-list-payment.css' | asset_url | stylesheet_tag }}
-{% endif %}
 
 <style>
   .drawer {
     visibility: hidden;
   }
-
-  {% if settings.cart_trust_badges != blank %}
-    .cart__trust-badges {
-      width: {{ settings.cart_trust_badges_width}}%;
-      margin: 0 auto;
-    }
-  {% endif %}
 </style>
 
 <cart-drawer class="drawer{% if cart == empty %} is-empty{% endif %}">
   <div id="CartDrawer" class="cart-drawer">
     <div id="CartDrawer-Overlay" class="cart-drawer__overlay"></div>
     <div
-      class="drawer__inner gradient "
+      class="drawer__inner gradient color-{{ settings.cart_color_scheme }}"
       role="dialog"
       aria-modal="true"
       aria-label="{{ 'sections.cart.title' | t }}"
@@ -59,11 +42,9 @@
                   {{- 'icon-close.svg' | inline_asset_content -}}
                 </span>
               </button>
-              {% if settings.display_continue_shopping %}
-                <a href="{% if settings.continue_shopping_url == blank %}{{ routes.all_products_collection_url }}{% else %}{{ settings.continue_shopping_url }}{% endif %}" class="button">
-                  {{ 'general.continue_shopping' | t }}
-                </a>
-              {% endif %}
+              <a href="{{ routes.all_products_collection_url }}" class="button">
+                {{ 'general.continue_shopping' | t }}
+              </a>
 
               {%- if shop.customer_accounts_enabled and customer == null -%}
                 <p class="cart__login-title h3">{{ 'sections.cart.login.title' | t }}</p>
@@ -93,15 +74,11 @@
           </span>
         </button>
       </div>
-      {% if settings.enable_cart_progress_bar and cart != empty %}
-        {% render 'cart-progress-bar' %}
-      {% endif %}
-      <div class="cart-drawer-items-and-upsell">
-        <cart-drawer-items
-          {% if cart == empty %}
-            class=" is-empty"
-          {% endif %}
-        >
+      <cart-drawer-items
+        {% if cart == empty %}
+          class=" is-empty"
+        {% endif %}
+      >
         <form
           action="{{ routes.cart_url }}"
           id="CartDrawer-Form"
@@ -166,39 +143,13 @@
                             {{- item.product.title | escape -}}
                           </a>
 
-                          {% liquid 
-                            assign display_compare = false
-                            assign compare_price = 0
-                            for variant in item.product.variants
-                              if variant.id == item.id 
-                                assign current_variant = variant
-                              endif
-                            endfor
-                            
-                            if settings.cart_displayed_compare_prices == 'automatic'
-                              if item.original_line_price != item.final_line_price 
-                                assign display_compare = true
-                                assign compare_price = item.original_line_price
-                              elsif current_variant.compare_at_price > item.final_price
-                                assign display_compare = true
-                                assign compare_price = current_variant.compare_at_price | times: item.quantity
-                              endif
-                            elsif settings.cart_displayed_compare_prices == 'product' and current_variant.compare_at_price > item.final_price
-                              assign display_compare = true
-                              assign compare_price = current_variant.compare_at_price | times: item.quantity
-                            elsif item.original_line_price != item.final_line_price
-                              assign display_compare = true
-                              assign compare_price = item.original_line_price
-                            endif
-                          %}
-
-                          {%- if item.original_price != item.final_price and settings.cart_display_single_item_prices -%}
+                          {%- if item.original_price != item.final_price -%}
                             <div class="cart-item__discounted-prices">
                               <span class="visually-hidden">
                                 {{ 'products.product.price.regular_price' | t }}
                               </span>
                               <s class="cart-item__old-price product-option">
-                                {{- compare_price | divided_by: item.quantity | money -}}
+                                {{- item.original_price | money -}}
                               </s>
                               <span class="visually-hidden">
                                 {{ 'products.product.price.sale_price' | t }}
@@ -219,21 +170,15 @@
                           -%}
                             <dl>
                               {%- if item.product.has_only_default_variant == false -%}
-                                {% if settings.displayed_variants == 'compact' %}
+                                {%- for option in item.options_with_values -%}
                                   <div class="product-option">
-                                    {{ item.options_with_values | map: 'value' | join: ' / ' }}
+                                    <dt>{{ option.name }}:</dt>
+                                    <dd>
+                                      {{ option.value -}}
+                                      {%- unless forloop.last %}, {% endunless %}
+                                    </dd>
                                   </div>
-                                {% else %}
-                                  {%- for option in item.options_with_values -%}
-                                    <div class="product-option">
-                                      <dt>{{ option.name }}:</dt>
-                                      <dd>
-                                        {{ option.value -}}
-                                        {%- unless forloop.last %}, {% endunless %}
-                                      </dd>
-                                    </div>
-                                  {%- endfor -%}
-                                {%- endif -%}
+                                {%- endfor -%}
                               {%- endif -%}
 
                               {%- for property in item.properties -%}
@@ -280,23 +225,23 @@
                         <td class="cart-item__totals right" role="cell" headers="CartDrawer-ColumnTotal">
                           {%- render 'loading-spinner' -%}
                           <div class="cart-item__price-wrapper">
-                            {%- if display_compare -%}
+                            {%- if item.original_line_price != item.final_line_price -%}
                               <div class="cart-item__discounted-prices">
                                 <span class="visually-hidden">
                                   {{ 'products.product.price.regular_price' | t }}
                                 </span>
                                 <s class="cart-item__old-price price price--end">
-                                  {{ compare_price | money }}
+                                  {{ item.original_line_price | money }}
                                 </s>
                                 <span class="visually-hidden">
                                   {{ 'products.product.price.sale_price' | t }}
                                 </span>
-                                <span class="price price--end cart-drawer__final-item-price accent-color-{{ settings.cart_price_color }}">
+                                <span class="price price--end">
                                   {{ item.final_line_price | money }}
                                 </span>
                               </div>
                             {%- else -%}
-                              <span class="price price--end cart-drawer__final-item-price accent-color-{{ settings.cart_price_color }}">
+                              <span class="price price--end">
                                 {{ item.original_line_price | money }}
                               </span>
                             {%- endif -%}
@@ -509,20 +454,7 @@
           <div id="CartDrawer-CartErrors" role="alert"></div>
         </form>
       </cart-drawer-items>
-      {% if settings.enable_cart_upsell_1 %}
-        {% render 'ds-cart-primary-upsell' %}
-      {% endif %}
-      {% if settings.enable_cart_upsell_2 and settings.cart_upsell_2_position == 'body' %}
-        {% render 'ds-cart-secondary-upsell' %}
-      {% endif %}
-      </div>
       <div class="drawer__footer">
-        {% if settings.enable_cart_upsell_2 and settings.cart_upsell_2_position == 'footer' %}
-          {% render 'ds-cart-secondary-upsell' %}
-        {% endif %}
-        {% if settings.enable_cart_discount %}
-          {% render 'ds-cart-discount-field' %}
-        {% endif %}
         {%- if settings.show_cart_note -%}
           <details id="Details-CartDrawer">
             <summary>
@@ -623,127 +555,7 @@
             {{ 'sections.cart.checkout' | t }}
           </button>
         </div>
-
-        {% if settings.show_cart_payment_badges %}
-          <div class="cart__badges">
-            <ul class="payment-badges" role="list">
-              {% assign enabled_payment_types = shop.enabled_payment_types %}
-              {% if settings.enabled_cart_payment_types != blank %}
-                {% assign enabled_payment_types = settings.enabled_cart_payment_types | remove: ' ' | split: ',' %}
-              {% endif %}
-        
-              {%- for type in enabled_payment_types -%}
-                {% assign payment_type = type | strip %}
-                <li class="list-payment__item">
-                  {{ payment_type | payment_type_svg_tag: class: 'icon icon--full-color' }}
-                </li>
-              {%- endfor -%}
-            </ul>
-          </div>
-        {% endif %}
-        {% if settings.cart_trust_badges %}
-          <div class="cart__badges cart__trust-badges">
-            <img
-              src="{{ settings.cart_trust_badges | image_url: width: 800 }}"
-              alt="{{ settings.cart_trust_badges.alt | escape }}"
-              loading="lazy"
-              width="auto"
-              height="auto"
-            >
-          </div>
-        {% endif %}
       </div>
     </div>
   </div>
 </cart-drawer>
-
-<script>
-  function primaryUpsellVariantChange() {
-    var primaryUpsellContainer = document.querySelector('.cart-primary-upsell')
-    var variantSelects = primaryUpsellContainer.querySelector('#variant-selects-cart-upsell-1');
-    var productForm = primaryUpsellContainer.querySelector('.form');
-    var productIdField = productForm.querySelector('input[name="id"]');
-
-    if (variantSelects) {
-        var selectedVariantId = variantSelects.querySelector('script[type="application/json"]').textContent;
-        var selectedVariant = JSON.parse(selectedVariantId).find(function(variant) {
-          var isMatch = true;
-
-          for (var i = 0; i < variant.options.length; i++) {
-            var selectElement = document.querySelector('#Option-cart-upsell-1-' + i);
-            if (selectElement.value !== variant.options[i]) {
-              isMatch = false;
-              break;
-            }
-          }
-
-          return isMatch;
-        });
-
-        if (selectedVariant) {
-          productIdField.value = selectedVariant.id;
-          if (selectedVariant.featured_image && selectedVariant.featured_image.src) {
-            var upsellImage = primaryUpsellContainer.querySelector('.cart-upsell__image__img');
-            upsellImage.src = selectedVariant.featured_image.src;
-          }
-        }
-
-    }
-  }
-</script>
-
-<script>
-  function secondaryUpsellVariantChange() {
-    var secondaryUpsellContainer = document.querySelector('.cart-secondary-upsell');
-    var variantSelects = secondaryUpsellContainer.querySelector('#variant-selects-cart-upsell-2');
-    var productForm = secondaryUpsellContainer.querySelector('.form');
-    var productIdField = productForm.querySelector('input[name="id"]');
-
-    if (variantSelects) {
-      var selectedVariantId = variantSelects.querySelector('script[type="application/json"]').textContent;
-      var selectedVariant = JSON.parse(selectedVariantId).find(function(variant) {
-        var isMatch = true;
-
-        for (var i = 0; i < variant.options.length; i++) {
-          var selectElement = document.querySelector('#Option-cart-upsell-2-' + i);
-          if (selectElement.value !== variant.options[i]) {
-            isMatch = false;
-            break;
-          }
-        }
-
-        return isMatch;
-      });
-
-      if (selectedVariant) {
-        productIdField.value = selectedVariant.id;
-        variantSelects.setAttribute('data-product-id', selectedVariant.id)
-        if (selectedVariant.featured_image && selectedVariant.featured_image.src) {
-          var upsellImage = secondaryUpsellContainer.querySelector('.cart-upsell__image__img');
-          upsellImage.src = selectedVariant.featured_image.src;
-        }
-      }
-    }
-  }
-</script>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    function isIE() {
-      const ua = window.navigator.userAgent;
-      const msie = ua.indexOf('MSIE ');
-      const trident = ua.indexOf('Trident/');
-
-      return msie > 0 || trident > 0;
-    }
-
-    if (!isIE()) return;
-    const cartSubmitInput = document.createElement('input');
-    cartSubmitInput.setAttribute('name', 'checkout');
-    cartSubmitInput.setAttribute('type', 'hidden');
-    document.querySelector('#cart').appendChild(cartSubmitInput);
-    document.querySelector('#checkout').addEventListener('click', function (event) {
-      document.querySelector('#cart').submit();
-    });
-  });
-</script>

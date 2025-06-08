@@ -17,13 +17,6 @@
   %}
 {% endcomment %}
 {%- liquid
-
-assign variants_available_arr = product.variants | map: 'available'
-assign variants_option1_arr = product.variants | map: 'option1'
-assign variants_option2_arr = product.variants | map: 'option2'
-assign variants_option3_arr = product.variants | map: 'option3'
-
-assign custom_colors_arr = block.settings.swatches_custom_colors_list | split: ','
   assign product_form_id = 'product-form-' | append: section.id
 -%}
 
@@ -44,8 +37,6 @@ assign custom_colors_arr = block.settings.swatches_custom_colors_list | split: '
     if value.available
       assign option_disabled = false
     endif
-    assign option_index = forloop.index0
-
   -%}
 
   {%- capture input_id -%}
@@ -66,39 +57,8 @@ assign custom_colors_arr = block.settings.swatches_custom_colors_list | split: '
       {{- 'products.product.variant_sold_out_or_unavailable' | t -}}
     </span>
   {%- endcapture -%}
-  
 
   {%- if picker_type == 'swatch' -%}
-    {% for variant in product.variants %}
-
-      {%- capture variant_option_key -%}
-        option{{- option.position -}}
-      {%- endcapture -%}
-
-      {% assign variant_option_val = variant[variant_option_key] %}
-      {% assign custom_color_swatch = blank %}
-
-      {% if variant_option_val == value %}
-        {% if block.settings.swatches_custom_colors == 'disabled' %}
-          {% if variant.image %}
-            {% assign custom_color_swatch = variant.image |  image_url  %}
-            {% assign swatch_type = 'image' %}
-          {% endif %}
-        {% else %}
-          {% liquid
-            if block.settings.swatches_custom_colors == 'image_alt'
-              assign custom_color_swatch = variant.image.alt
-              assign swatch_type = 'image_alt'
-            else
-              assign custom_color_swatch = custom_colors_arr[option_index]
-              assign swatch_type = 'custom_color'
-            endif
-            
-          %}
-        {% endif %}
-        {% break %}
-      {% endif %}
-    {% endfor %}
     {%- capture help_text -%}
       <span class="visually-hidden">{{ value | escape }}</span>
       {{ label_unavailable }}
@@ -112,12 +72,9 @@ assign custom_colors_arr = block.settings.swatches_custom_colors_list | split: '
       product_form_id: product_form_id,
       checked: value.selected,
       visually_disabled: option_disabled,
-      shape: 'circle',
+      shape: block.settings.swatch_shape,
       help_text: help_text,
-      additional_props: input_dataset,
-      block:block,
-      custom_color_swatch: custom_color_swatch
-      swatch_type: swatch_type
+      additional_props: input_dataset
     %}
   {%- elsif picker_type == 'button' -%}
     <input
