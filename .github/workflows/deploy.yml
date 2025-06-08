@@ -1,5 +1,6 @@
 name: Deploy Shopify Theme
 
+# 1. On déclenche sur push vers main
 on:
   push:
     branches:
@@ -7,23 +8,35 @@ on:
 
 jobs:
   deploy:
+    # 2. Machine Ubuntu
     runs-on: ubuntu-latest
+
     steps:
+      # 3. Récupérer le code du repo
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 4. Installer Node.js v18
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
+      # 5. Installer le Shopify CLI
       - name: Install Shopify CLI
         run: npm install -g @shopify/cli @shopify/theme
 
+      # 6. Configurer le Shopify CLI avec tes secrets
       - name: Configure Shopify CLI
         run: |
-          echo "store: ${{ secrets.SHOPIFY_STORE }}" >> ~/.shopify-cli.yml
+          echo "store: ${{ secrets.SHOPIFY_STORE }}"  > ~/.shopify-cli.yml
           echo "password: ${{ secrets.SHOPIFY_PASSWORD }}" >> ~/.shopify-cli.yml
 
+      # 7. Pousser le thème (obligatoire : --theme pour éviter la sélection interactive)
       - name: Deploy theme to Shopify
-        run: shopify theme push --store=${{ secrets.SHOPIFY_STORE }} --password=${{ secrets.SHOPIFY_PASSWORD }} --allow-live
+        run: |
+          shopify theme push \
+            --store=${{ secrets.SHOPIFY_STORE }} \
+            --password=${{ secrets.SHOPIFY_PASSWORD }} \
+            --theme=${{ secrets.SHOPIFY_THEME_ID }} \
+            --allow-live
